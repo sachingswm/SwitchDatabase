@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface DatabaseDetailsDao extends JpaRepository<DatabaseDetails,Integer> {
-    public DatabaseDetails findByUsername(String url);
+    public DatabaseDetails findById(int id);
 
 }
