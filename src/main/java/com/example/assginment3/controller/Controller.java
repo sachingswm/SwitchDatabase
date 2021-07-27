@@ -19,32 +19,30 @@ public class Controller {
     @Autowired
     private DatabaseDetailsDao databaseDetailsDao;
 
-    private Connection connection;
-
     @Autowired
     private TestDao testDao;
 
     @PostMapping("/switchDatabase/{id}")
-    public void switchDatabase(@PathVariable int id)
+    public Connection switchDatabase(@PathVariable int id)
     {
         DatabaseDetails databaseDetails=databaseDetailsDao.findById(id);
         if(databaseDetails==null)
         {
-            return;
+            return null;
         }
         String jdbcUrl = databaseDetails.getUrl();
         String username=databaseDetails.getUsername();
         String password = databaseDetails.getPassword();
         try{
-            System.out.println(jdbcUrl+" "+username+" "+password);
-            connection = DriverManager.getConnection(jdbcUrl,username,password);
+            Connection connection = DriverManager.getConnection(jdbcUrl,username,password);
             Statement statement=connection.createStatement();
-            statement.executeUpdate("CREATE TABLE test (id INT,name VARCHAR(100),PRIMARY KEY (id))");
-            System.out.println("Table created");
+            statement.executeUpdate("CREATE TABLE IF NOT  EXISTS test (id INT,name VARCHAR(100),PRIMARY KEY (id))");
+            return connection;
         }
         catch (Exception e)
         {
             System.out.println(e);
+            return null;
         }
     }
     @PostMapping("/setDatabaseDetails")
@@ -53,10 +51,11 @@ public class Controller {
         return databaseDetailsDao.save(databaseDetails);
     }
 
-    @GetMapping("/getData")
-    public List<Test> getData()
+    @GetMapping("{db_id}/getData")
+    public List<Test> getData(@PathVariable int db_id)
     {
         List<Test> list=new ArrayList<>();
+        Connection connection=switchDatabase(db_id);
         if(connection==null)
             return list;
         try{
